@@ -27,6 +27,7 @@ export const SCORE_BURGER_COMPLETE = 1000;
 export const SCORE_BONUS_ITEM = 300;
 
 export const LEVEL_COMPLETE_DELAY = 180;
+export const BONUS_ITEM_TTL = 600; // ~10 seconds at 60fps
 
 export const COLORS = {
   bg: "#000000",

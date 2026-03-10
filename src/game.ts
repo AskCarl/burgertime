@@ -1,6 +1,6 @@
 import type { GameState, Player, Enemy, BonusItem } from "./types";
 import { getLevel } from "./level";
-import { createPlayer, updatePlayer, killPlayer } from "./player";
+import { createPlayer, updatePlayer, killPlayer, resetPlayerState } from "./player";
 import { createEnemy, updateEnemy, checkPepperHit, checkEnemyPlayerCollision } from "./enemy";
 import {
   createIngredients,
@@ -13,13 +13,13 @@ import {
   LEVEL_COMPLETE_DELAY,
   TILE_SIZE,
   SCORE_BONUS_ITEM,
-  STARTING_PEPPER,
+  BONUS_ITEM_TTL,
 } from "./constants";
 import {
-  playFallSound,
   playDeathSound,
   playLevelCompleteSound,
   playBonusSound,
+  playPepperSound,
 } from "./audio";
 
 const HIGH_SCORE_KEY = "burgertime_highscore";
@@ -54,9 +54,6 @@ function initLevel(state: GameState): void {
     state.players.push(createPlayer(levelData.player2Spawn, 1));
   }
 
-  // Restore scores and lives from previous level
-  // (handled by caller for level progression)
-
   // Create enemies (more enemies at higher levels)
   const enemySpawns = levelData.enemySpawns;
   state.enemies = enemySpawns.map((spawn) =>
@@ -77,6 +74,7 @@ export function startGame(state: GameState, twoPlayer: boolean): void {
   state.twoPlayerMode = twoPlayer;
   state.level = 0;
   state.screen = "playing";
+  resetPlayerState();
   initLevel(state);
 }
 
@@ -117,7 +115,13 @@ function updatePlaying(state: GameState): void {
     const input = inputs[i];
     if (!player || !input) continue;
 
+    const wasPeppering = player.pepperActive;
     updatePlayer(player, input, state.levelData);
+
+    // Play pepper sound on activation
+    if (player.pepperActive && !wasPeppering) {
+      playPepperSound();
+    }
 
     // Check ingredient walk-over
     checkPlayerOnIngredient(player, state.ingredients);
@@ -133,7 +137,7 @@ function updatePlaying(state: GameState): void {
     // Check collision with players
     for (const player of state.players) {
       if (checkEnemyPlayerCollision(enemy, player)) {
-        killPlayer(player, state.levelData);
+        killPlayer(player);
         playDeathSound();
       }
     }
@@ -216,13 +220,20 @@ function updateBonusItems(state: GameState): void {
       type,
       active: true,
       points: SCORE_BONUS_ITEM,
+      ttl: BONUS_ITEM_TTL,
     };
     state.bonusItems.push(item);
   }
 
-  // Check player pickup
+  // Tick TTL and check player pickup
   for (const item of state.bonusItems) {
     if (!item.active) continue;
+
+    item.ttl--;
+    if (item.ttl <= 0) {
+      item.active = false;
+      continue;
+    }
 
     for (const player of state.players) {
       if (!player.alive) continue;

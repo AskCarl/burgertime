@@ -23,10 +23,7 @@ function addLadder(ladders: boolean[][], col: number, startRow: number, endRow: 
     const ladderRow = ladders[r];
     if (ladderRow) {
       ladderRow[col] = true;
-      const nextCol = ladders[r];
-      if (nextCol) {
-        nextCol[col + 1] = true;
-      }
+      ladderRow[col + 1] = true; // ladders are 2 tiles wide
     }
   }
 }

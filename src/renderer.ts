@@ -1,4 +1,4 @@
-import type { GameState, Player, Enemy, IngredientPiece, BonusItem } from "./types";
+import type { GameState, Player, Enemy, IngredientType } from "./types";
 import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
@@ -6,10 +6,7 @@ import {
   COLS,
   ROWS,
   COLORS,
-  PLATFORM_ROWS,
   INGREDIENT_WIDTH,
-  HUD_HEIGHT,
-  PEPPER_RANGE,
 } from "./constants";
 
 let canvas: HTMLCanvasElement;
@@ -123,8 +120,8 @@ function renderHUD(state: GameState): void {
     ctx.fillStyle = COLORS.scoreText;
     ctx.fillText(`1UP ${p1.score.toString().padStart(6, "0")}`, 8, 14);
 
-    // Lives
-    for (let i = 0; i < p1.lives; i++) {
+    // Lives (cap display at 5)
+    for (let i = 0; i < Math.min(p1.lives, 5); i++) {
       drawMiniChef(8 + i * 12, 20, COLORS.player1Hat);
     }
 
@@ -147,7 +144,7 @@ function renderHUD(state: GameState): void {
       ctx.fillStyle = COLORS.player2;
       ctx.fillText(`2UP ${p2.score.toString().padStart(6, "0")}`, CANVAS_WIDTH - 8, 14);
 
-      for (let i = 0; i < p2.lives; i++) {
+      for (let i = 0; i < Math.min(p2.lives, 5); i++) {
         drawMiniChef(CANVAS_WIDTH - 40 + i * 12, 20, COLORS.player2Hat);
       }
 
@@ -228,17 +225,15 @@ function renderIngredients(state: GameState): void {
   }
 }
 
-function drawIngredientPixels(x: number, y: number, type: string): void {
+function drawIngredientPixels(x: number, y: number, type: IngredientType): void {
   const w = INGREDIENT_WIDTH * TILE_SIZE;
 
   switch (type) {
     case "bun-top":
       ctx.fillStyle = COLORS.bunTop;
-      // Rounded top bun shape
       ctx.fillRect(x + 4, y, w - 8, 4);
       ctx.fillRect(x + 2, y + 2, w - 4, 6);
       ctx.fillRect(x, y + 4, w, 8);
-      // Sesame seeds
       ctx.fillStyle = COLORS.bunTopSesame;
       ctx.fillRect(x + 10, y + 2, 3, 2);
       ctx.fillRect(x + 24, y + 2, 3, 2);
@@ -263,7 +258,6 @@ function drawIngredientPixels(x: number, y: number, type: string): void {
       ctx.fillStyle = COLORS.meat;
       ctx.fillRect(x + 2, y + 2, w - 4, 10);
       ctx.fillRect(x, y + 4, w, 6);
-      // Grill lines
       ctx.fillStyle = "#5C2D00";
       ctx.fillRect(x + 6, y + 5, w - 12, 1);
       ctx.fillRect(x + 6, y + 8, w - 12, 1);
@@ -273,10 +267,14 @@ function drawIngredientPixels(x: number, y: number, type: string): void {
       ctx.fillStyle = COLORS.cheese;
       ctx.fillRect(x, y + 4, w, 6);
       ctx.fillRect(x + 2, y + 2, w - 4, 10);
-      // Melty edges
       ctx.fillRect(x - 2, y + 8, 4, 4);
       ctx.fillRect(x + w - 2, y + 8, 4, 4);
       break;
+
+    default: {
+      const _exhaustive: never = type;
+      return _exhaustive;
+    }
   }
 }
 
@@ -436,6 +434,11 @@ function renderEnemy(enemy: Enemy): void {
         ctx.fillRect(x + 10, y + 13, 3, 3);
       }
       break;
+
+    default: {
+      const _exhaustive: never = enemy.type;
+      return _exhaustive;
+    }
   }
 }
 

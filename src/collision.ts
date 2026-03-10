@@ -1,20 +1,6 @@
 import type { Position, GridPosition, LevelData } from "./types";
 import { TILE_SIZE, INGREDIENT_WIDTH } from "./constants";
 
-export function posToGrid(pos: Position): GridPosition {
-  return {
-    col: Math.round(pos.x / TILE_SIZE),
-    row: Math.round(pos.y / TILE_SIZE),
-  };
-}
-
-export function gridToPos(grid: GridPosition): Position {
-  return {
-    x: grid.col * TILE_SIZE,
-    y: grid.row * TILE_SIZE,
-  };
-}
-
 export function isOnPlatform(pos: Position, levelData: LevelData): boolean {
   const col = Math.round(pos.x / TILE_SIZE);
   const row = Math.round(pos.y / TILE_SIZE);
@@ -72,22 +58,6 @@ export function snapToGrid(pos: Position): Position {
     x: Math.round(pos.x / TILE_SIZE) * TILE_SIZE,
     y: Math.round(pos.y / TILE_SIZE) * TILE_SIZE,
   };
-}
-
-export function boxOverlap(
-  a: Position,
-  aWidth: number,
-  aHeight: number,
-  b: Position,
-  bWidth: number,
-  bHeight: number
-): boolean {
-  return (
-    a.x < b.x + bWidth &&
-    a.x + aWidth > b.x &&
-    a.y < b.y + bHeight &&
-    a.y + aHeight > b.y
-  );
 }
 
 export function isOverIngredient(

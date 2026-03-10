@@ -1,8 +1,8 @@
 {
   "name": "burgertime",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "BurgerTime arcade game clone",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

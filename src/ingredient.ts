@@ -7,8 +7,10 @@ import {
   SCORE_INGREDIENT_DROP,
   SCORE_ENEMY_SQUASH,
   SCORE_BURGER_COMPLETE,
+  RESPAWN_DELAY,
 } from "./constants";
-import { isOverIngredient, boxOverlap } from "./collision";
+import { isOverIngredient } from "./collision";
+import { playEnemySquashSound, playBurgerCompleteSound } from "./audio";
 
 export function createIngredients(
   stacks: { col: number; ingredients: IngredientType[]; plateRow: number }[]
@@ -38,6 +40,7 @@ export function createIngredients(
         targetRow: PLATFORM_ROWS[i + 1] ?? stack.plateRow,
         walkProgress: new Array(INGREDIENT_WIDTH).fill(0) as number[],
         settled: false,
+        lastPlayerIndex: 0,
       };
 
       ingredients.push(piece);
@@ -70,6 +73,9 @@ export function checkPlayerOnIngredient(
           piece.walkProgress[localCol] = 1;
         }
       }
+
+      // Track which player is walking on this ingredient
+      piece.lastPlayerIndex = player.playerIndex;
 
       // Check if fully walked over
       if (piece.walkProgress.every((p) => p > 0)) {
@@ -116,11 +122,14 @@ export function updateIngredients(
         enemyCol < piece.col + INGREDIENT_WIDTH
       ) {
         enemy.alive = false;
-        enemy.respawnTimer = 300;
+        enemy.respawnTimer = RESPAWN_DELAY;
         piece.extraFallLevels++;
-        for (const p of players) {
-          if (p.alive) p.score += SCORE_ENEMY_SQUASH;
+        // Award score to the player who dropped this ingredient
+        const scorer = players.find((p) => p.playerIndex === piece.lastPlayerIndex);
+        if (scorer && scorer.alive) {
+          scorer.score += SCORE_ENEMY_SQUASH;
         }
+        playEnemySquashSound();
       }
     }
 
@@ -171,9 +180,12 @@ export function updateIngredients(
           piece.fallY = piece.row * TILE_SIZE;
 
           if (stack.pieces.every((p) => p.settled)) {
-            for (const p of players) {
-              if (p.alive) p.score += SCORE_BURGER_COMPLETE;
+            // Award completion bonus to the player who dropped the final piece
+            const scorer = players.find((p) => p.playerIndex === piece.lastPlayerIndex);
+            if (scorer && scorer.alive) {
+              scorer.score += SCORE_BURGER_COMPLETE;
             }
+            playBurgerCompleteSound();
           }
         }
       }

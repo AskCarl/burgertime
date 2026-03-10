@@ -50,6 +50,8 @@ export interface Enemy {
   walkTimer: number;
   subPixelX: number;
   subPixelY: number;
+  spawnCol: number;
+  spawnRow: number;
 }
 
 export interface IngredientPiece {
@@ -64,6 +66,7 @@ export interface IngredientPiece {
   targetRow: number;
   walkProgress: number[];
   settled: boolean;
+  lastPlayerIndex: number;
 }
 
 export interface BurgerStack {
@@ -109,6 +112,7 @@ export interface BonusItem {
   type: "icecream" | "coffee" | "fries";
   active: boolean;
   points: number;
+  ttl: number;
 }
 
 export interface InputState {

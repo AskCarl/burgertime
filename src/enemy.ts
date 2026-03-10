@@ -35,6 +35,8 @@ export function createEnemy(
     walkTimer: 0,
     subPixelX: 0,
     subPixelY: 0,
+    spawnCol: col,
+    spawnRow: row,
   };
 }
 
@@ -46,12 +48,9 @@ export function updateEnemy(
   if (!enemy.alive) {
     enemy.respawnTimer--;
     if (enemy.respawnTimer <= 0) {
-      // Find a spawn position from level data
-      const spawn = levelData.enemySpawns.find((s) => s.type === enemy.type);
-      if (spawn) {
-        enemy.pos = { x: spawn.col * TILE_SIZE, y: spawn.row * TILE_SIZE };
-        enemy.gridPos = { col: spawn.col, row: spawn.row };
-      }
+      // Respawn at original spawn position
+      enemy.pos = { x: enemy.spawnCol * TILE_SIZE, y: enemy.spawnRow * TILE_SIZE };
+      enemy.gridPos = { col: enemy.spawnCol, row: enemy.spawnRow };
       enemy.alive = true;
       enemy.stunTimer = 0;
       enemy.subPixelX = 0;

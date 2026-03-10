@@ -35,6 +35,10 @@ export function createPlayer(spawn: GridPosition, index: number): Player {
 
 let prevPepperPressed: boolean[] = [false, false];
 
+export function resetPlayerState(): void {
+  prevPepperPressed = [false, false];
+}
+
 /**
  * Add fractional speed to accumulator, return whole pixels to move.
  */
@@ -233,7 +237,7 @@ function coastToGrid(player: Player): void {
   }
 }
 
-export function killPlayer(player: Player, levelData: LevelData): void {
+export function killPlayer(player: Player): void {
   if (!player.alive) return;
   player.lives--;
   player.alive = false;
