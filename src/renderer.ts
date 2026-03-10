@@ -17,28 +17,31 @@ export function initRenderer(): { canvas: HTMLCanvasElement; ctx: CanvasRenderin
   canvas.width = CANVAS_WIDTH;
   canvas.height = CANVAS_HEIGHT;
 
-  const scale = Math.min(
-    window.innerWidth / CANVAS_WIDTH,
-    window.innerHeight / CANVAS_HEIGHT,
-    3
-  );
-  canvas.style.width = `${CANVAS_WIDTH * scale}px`;
-  canvas.style.height = `${CANVAS_HEIGHT * scale}px`;
-
   const renderCtx = canvas.getContext("2d");
   if (!renderCtx) throw new Error("Could not get 2d context");
   ctx = renderCtx;
   ctx.imageSmoothingEnabled = false;
 
-  window.addEventListener("resize", () => {
-    const s = Math.min(
+  function scaleCanvas(): void {
+    const touchControls = document.getElementById("touch-controls");
+    const controlsHeight = touchControls?.offsetHeight ?? 0;
+    const availHeight = window.innerHeight - controlsHeight;
+    const scale = Math.min(
       window.innerWidth / CANVAS_WIDTH,
-      window.innerHeight / CANVAS_HEIGHT,
+      availHeight / CANVAS_HEIGHT,
       3
     );
-    canvas.style.width = `${CANVAS_WIDTH * s}px`;
-    canvas.style.height = `${CANVAS_HEIGHT * s}px`;
-  });
+    canvas.style.width = `${CANVAS_WIDTH * scale}px`;
+    canvas.style.height = `${CANVAS_HEIGHT * scale}px`;
+
+    // Scale touch controls to match canvas width
+    if (touchControls) {
+      touchControls.style.maxWidth = `${CANVAS_WIDTH * scale}px`;
+    }
+  }
+
+  scaleCanvas();
+  window.addEventListener("resize", scaleCanvas);
 
   return { canvas, ctx };
 }

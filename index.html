@@ -2,26 +2,123 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>BurgerTime</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: #000;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      min-height: 100dvh;
       overflow: hidden;
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
     canvas {
       image-rendering: pixelated;
       image-rendering: crisp-edges;
     }
+    #touch-controls {
+      display: none;
+      width: 100%;
+      max-width: 448px;
+      padding: 8px 16px;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dpad {
+      display: grid;
+      grid-template-columns: 56px 56px 56px;
+      grid-template-rows: 56px 56px 56px;
+      gap: 4px;
+    }
+    .dpad-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 8px;
+      border: 2px solid #444;
+      background: rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #888;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .dpad-btn:active, .dpad-btn.active {
+      background: rgba(255,255,255,0.25);
+      border-color: #888;
+      color: #fff;
+    }
+    .dpad-blank { visibility: hidden; }
+    .action-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+    .action-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 2px solid #444;
+      background: rgba(255,68,68,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-family: monospace;
+      font-weight: bold;
+      color: #FF4444;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .action-btn:active, .action-btn.active {
+      background: rgba(255,68,68,0.4);
+      border-color: #FF4444;
+    }
+    .start-btn {
+      width: 80px;
+      height: 36px;
+      border-radius: 18px;
+      border: 2px solid #444;
+      background: rgba(255,215,0,0.15);
+      font-size: 11px;
+      font-family: monospace;
+      font-weight: bold;
+      color: #FFD700;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .start-btn:active, .start-btn.active {
+      background: rgba(255,215,0,0.4);
+      border-color: #FFD700;
+    }
   </style>
 </head>
 <body>
   <canvas id="game"></canvas>
+  <div id="touch-controls">
+    <div class="dpad">
+      <div class="dpad-btn dpad-blank"></div>
+      <div class="dpad-btn" data-dir="up">&#9650;</div>
+      <div class="dpad-btn dpad-blank"></div>
+      <div class="dpad-btn" data-dir="left">&#9664;</div>
+      <div class="dpad-btn dpad-blank"></div>
+      <div class="dpad-btn" data-dir="right">&#9654;</div>
+      <div class="dpad-btn dpad-blank"></div>
+      <div class="dpad-btn" data-dir="down">&#9660;</div>
+      <div class="dpad-btn dpad-blank"></div>
+    </div>
+    <div class="action-btns">
+      <div class="action-btn" data-action="pepper">PEPPER</div>
+      <div class="start-btn" data-action="start">START</div>
+    </div>
+  </div>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
