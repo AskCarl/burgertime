@@ -4,7 +4,7 @@ export type EnemyType = "hotdog" | "pickle" | "egg";
 
 export type IngredientType = "bun-top" | "lettuce" | "meat" | "cheese" | "bun-bottom";
 
-export type GameScreen = "title" | "playing" | "gameover" | "levelcomplete";
+export type GameScreen = "title" | "playing" | "gameover" | "levelcomplete" | "getready";
 
 export interface Position {
   x: number;
@@ -35,6 +35,10 @@ export interface Player {
   lives: number;
   extraLifeAwarded: boolean;
   playerIndex: number;
+  dying: boolean;
+  deathTimer: number;
+  deathFrame: number;
+  invulnTimer: number;
 }
 
 export interface Enemy {
@@ -52,6 +56,7 @@ export interface Enemy {
   subPixelY: number;
   spawnCol: number;
   spawnRow: number;
+  ridingIngredient: number | null;
 }
 
 export interface IngredientPiece {
@@ -67,6 +72,7 @@ export interface IngredientPiece {
   walkProgress: number[];
   settled: boolean;
   lastPlayerIndex: number;
+  squashedEnemyCount: number;
 }
 
 export interface BurgerStack {
@@ -105,6 +111,8 @@ export interface GameState {
   levelCompleteTimer: number;
   bonusItems: BonusItem[];
   bonusSpawnTimer: number;
+  getReadyTimer: number;
+  scorePopups: ScorePopup[];
 }
 
 export interface BonusItem {
@@ -113,6 +121,13 @@ export interface BonusItem {
   active: boolean;
   points: number;
   ttl: number;
+}
+
+export interface ScorePopup {
+  x: number;
+  y: number;
+  value: number;
+  timer: number;
 }
 
 export interface InputState {

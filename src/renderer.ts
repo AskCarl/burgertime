@@ -8,6 +8,19 @@ import {
   COLORS,
   INGREDIENT_WIDTH,
 } from "./constants";
+import {
+  drawSprite,
+  PALETTE,
+  getChefSprite,
+  getDeathSprite,
+  getEnemySprite,
+  getIngredientSprite,
+  PEPPER_CLOUD,
+  MINI_CHEF,
+  ICECREAM_SPRITE,
+  COFFEE_SPRITE,
+  FRIES_SPRITE,
+} from "./sprites";
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
@@ -56,6 +69,10 @@ export function render(state: GameState): void {
       break;
     case "playing":
       renderGame(state);
+      break;
+    case "getready":
+      renderGame(state);
+      renderGetReady();
       break;
     case "levelcomplete":
       renderGame(state);
@@ -111,6 +128,14 @@ function renderGame(state: GameState): void {
       renderPepper(player);
     }
   }
+
+  // Score popups
+  for (const popup of state.scorePopups) {
+    ctx.fillStyle = COLORS.scoreText;
+    ctx.font = "bold 10px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(popup.value.toString(), popup.x + 8, popup.y);
+  }
 }
 
 function renderHUD(state: GameState): void {
@@ -159,10 +184,8 @@ function renderHUD(state: GameState): void {
 }
 
 function drawMiniChef(x: number, y: number, hatColor: string): void {
-  ctx.fillStyle = hatColor;
-  ctx.fillRect(x + 1, y, 6, 3);
-  ctx.fillStyle = COLORS.text;
-  ctx.fillRect(x + 2, y + 3, 4, 5);
+  const miniPalette = { ...PALETTE, 1: hatColor };
+  drawSprite(ctx, x, y, MINI_CHEF, miniPalette);
 }
 
 function renderPlatformsAndLadders(state: GameState): void {
@@ -229,104 +252,39 @@ function renderIngredients(state: GameState): void {
 }
 
 function drawIngredientPixels(x: number, y: number, type: IngredientType): void {
-  const w = INGREDIENT_WIDTH * TILE_SIZE;
-
-  switch (type) {
-    case "bun-top":
-      ctx.fillStyle = COLORS.bunTop;
-      ctx.fillRect(x + 4, y, w - 8, 4);
-      ctx.fillRect(x + 2, y + 2, w - 4, 6);
-      ctx.fillRect(x, y + 4, w, 8);
-      ctx.fillStyle = COLORS.bunTopSesame;
-      ctx.fillRect(x + 10, y + 2, 3, 2);
-      ctx.fillRect(x + 24, y + 2, 3, 2);
-      ctx.fillRect(x + 40, y + 3, 3, 2);
-      break;
-
-    case "bun-bottom":
-      ctx.fillStyle = COLORS.bunBottom;
-      ctx.fillRect(x, y + 4, w, 8);
-      ctx.fillRect(x + 2, y + 2, w - 4, 10);
-      break;
-
-    case "lettuce":
-      ctx.fillStyle = COLORS.lettuce;
-      for (let i = 0; i < w; i += 4) {
-        const h = (i % 8 === 0) ? 10 : 8;
-        ctx.fillRect(x + i, y + (12 - h), 4, h);
-      }
-      break;
-
-    case "meat":
-      ctx.fillStyle = COLORS.meat;
-      ctx.fillRect(x + 2, y + 2, w - 4, 10);
-      ctx.fillRect(x, y + 4, w, 6);
-      ctx.fillStyle = "#5C2D00";
-      ctx.fillRect(x + 6, y + 5, w - 12, 1);
-      ctx.fillRect(x + 6, y + 8, w - 12, 1);
-      break;
-
-    case "cheese":
-      ctx.fillStyle = COLORS.cheese;
-      ctx.fillRect(x, y + 4, w, 6);
-      ctx.fillRect(x + 2, y + 2, w - 4, 10);
-      ctx.fillRect(x - 2, y + 8, 4, 4);
-      ctx.fillRect(x + w - 2, y + 8, 4, 4);
-      break;
-
-    default: {
-      const _exhaustive: never = type;
-      return _exhaustive;
-    }
-  }
+  const sprite = getIngredientSprite(type);
+  drawSprite(ctx, x, y, sprite, PALETTE);
 }
 
 function renderPlayer(player: Player): void {
+  // Death animation
+  if (player.dying) {
+    const sprite = getDeathSprite(player.deathFrame);
+    const isP2 = player.playerIndex === 1;
+    const palette = isP2 ? { ...PALETTE, 1: "#00AA00" } : PALETTE;
+    drawSprite(ctx, player.pos.x, player.pos.y - 4, sprite, palette);
+    return;
+  }
+
   if (!player.alive) return;
+
+  // Invulnerability blink — skip every other 4-frame window
+  if (player.invulnTimer > 0 && Math.floor(player.invulnTimer / 4) % 2 === 0) {
+    return;
+  }
 
   const x = player.pos.x;
   const y = player.pos.y;
+  const sprite = getChefSprite(player.facing, player.walkFrame);
   const isP2 = player.playerIndex === 1;
-  const hatColor = isP2 ? COLORS.player2Hat : COLORS.player1Hat;
-  const bodyColor = isP2 ? COLORS.player2Body : COLORS.player1Body;
-
-  // Hat
-  ctx.fillStyle = hatColor;
-  ctx.fillRect(x + 2, y - 4, 12, 5);
-  ctx.fillRect(x + 4, y - 6, 8, 3);
-
-  // Face
-  ctx.fillStyle = "#FFCC99";
-  ctx.fillRect(x + 3, y + 1, 10, 6);
-
-  // Eyes
-  ctx.fillStyle = "#000";
-  if (player.facing === "left") {
-    ctx.fillRect(x + 4, y + 3, 2, 2);
-  } else {
-    ctx.fillRect(x + 10, y + 3, 2, 2);
-  }
-
-  // Body
-  ctx.fillStyle = bodyColor;
-  ctx.fillRect(x + 3, y + 7, 10, 6);
-
-  // Legs (animated)
-  if (player.walkFrame % 2 === 0) {
-    ctx.fillRect(x + 3, y + 13, 4, 3);
-    ctx.fillRect(x + 9, y + 13, 4, 3);
-  } else {
-    ctx.fillRect(x + 2, y + 13, 4, 3);
-    ctx.fillRect(x + 10, y + 13, 4, 3);
-  }
+  const palette = isP2 ? { ...PALETTE, 1: "#00AA00" } : PALETTE;
+  drawSprite(ctx, x, y - 4, sprite, palette);
 }
 
 function renderPepper(player: Player): void {
-  ctx.fillStyle = COLORS.pepper;
   const px = player.pos.x + 8;
   const py = player.pos.y + 4;
 
-  // Draw pepper cloud in facing direction
   let pepperX = px;
   let pepperY = py;
 
@@ -345,12 +303,9 @@ function renderPepper(player: Player): void {
       break;
   }
 
-  // Pepper cloud particles
-  const t = player.pepperTimer;
-  for (let i = 0; i < 6; i++) {
-    const ox = Math.sin(t * 0.3 + i * 1.5) * 6;
-    const oy = Math.cos(t * 0.4 + i * 1.2) * 4;
-    ctx.fillRect(pepperX + ox, pepperY + oy, 3, 3);
+  // Flicker effect based on timer
+  if (player.pepperTimer % 4 < 2) {
+    drawSprite(ctx, pepperX - 8, pepperY - 8, PEPPER_CLOUD, PALETTE);
   }
 }
 
@@ -361,88 +316,11 @@ function renderEnemy(enemy: Enemy): void {
   const y = enemy.pos.y;
 
   if (enemy.stunTimer > 0) {
-    // Flashing when stunned
     if (Math.floor(enemy.stunTimer / 4) % 2 === 0) return;
   }
 
-  switch (enemy.type) {
-    case "hotdog":
-      // Bun
-      ctx.fillStyle = COLORS.hotdogBun;
-      ctx.fillRect(x + 2, y + 2, 12, 10);
-      // Hotdog
-      ctx.fillStyle = COLORS.hotdog;
-      ctx.fillRect(x + 4, y + 4, 8, 6);
-      // Eyes
-      ctx.fillStyle = "#000";
-      ctx.fillRect(x + 5, y + 3, 2, 2);
-      ctx.fillRect(x + 9, y + 3, 2, 2);
-      // Legs
-      ctx.fillStyle = COLORS.hotdogBun;
-      if (enemy.walkFrame === 0) {
-        ctx.fillRect(x + 3, y + 12, 3, 4);
-        ctx.fillRect(x + 10, y + 12, 3, 4);
-      } else {
-        ctx.fillRect(x + 2, y + 12, 3, 4);
-        ctx.fillRect(x + 11, y + 12, 3, 4);
-      }
-      break;
-
-    case "pickle":
-      // Body
-      ctx.fillStyle = COLORS.pickle;
-      ctx.fillRect(x + 3, y + 1, 10, 12);
-      ctx.fillRect(x + 5, y, 6, 14);
-      // Eyes
-      ctx.fillStyle = "#FFF";
-      ctx.fillRect(x + 5, y + 3, 3, 3);
-      ctx.fillRect(x + 9, y + 3, 3, 3);
-      ctx.fillStyle = "#000";
-      ctx.fillRect(x + 6, y + 4, 1, 1);
-      ctx.fillRect(x + 10, y + 4, 1, 1);
-      // Bumps
-      ctx.fillStyle = "#1A6E1A";
-      ctx.fillRect(x + 3, y + 6, 2, 2);
-      ctx.fillRect(x + 11, y + 8, 2, 2);
-      // Legs
-      ctx.fillStyle = COLORS.pickle;
-      if (enemy.walkFrame === 0) {
-        ctx.fillRect(x + 4, y + 13, 3, 3);
-        ctx.fillRect(x + 9, y + 13, 3, 3);
-      } else {
-        ctx.fillRect(x + 3, y + 13, 3, 3);
-        ctx.fillRect(x + 10, y + 13, 3, 3);
-      }
-      break;
-
-    case "egg":
-      // Body
-      ctx.fillStyle = COLORS.egg;
-      ctx.fillRect(x + 3, y + 1, 10, 11);
-      ctx.fillRect(x + 5, y, 6, 13);
-      // Yolk
-      ctx.fillStyle = COLORS.eggYolk;
-      ctx.fillRect(x + 5, y + 4, 6, 5);
-      // Eyes
-      ctx.fillStyle = "#000";
-      ctx.fillRect(x + 5, y + 2, 2, 2);
-      ctx.fillRect(x + 9, y + 2, 2, 2);
-      // Legs
-      ctx.fillStyle = COLORS.eggYolk;
-      if (enemy.walkFrame === 0) {
-        ctx.fillRect(x + 4, y + 13, 3, 3);
-        ctx.fillRect(x + 9, y + 13, 3, 3);
-      } else {
-        ctx.fillRect(x + 3, y + 13, 3, 3);
-        ctx.fillRect(x + 10, y + 13, 3, 3);
-      }
-      break;
-
-    default: {
-      const _exhaustive: never = enemy.type;
-      return _exhaustive;
-    }
-  }
+  const sprite = getEnemySprite(enemy.type, enemy.walkFrame);
+  drawSprite(ctx, x, y, sprite, PALETTE);
 }
 
 function renderBonusItems(state: GameState): void {
@@ -452,30 +330,26 @@ function renderBonusItems(state: GameState): void {
     const x = item.pos.x;
     const y = item.pos.y;
 
-    switch (item.type) {
-      case "icecream":
-        ctx.fillStyle = COLORS.icecream;
-        ctx.fillRect(x + 4, y, 8, 8);
-        ctx.fillStyle = "#F5DEB3";
-        ctx.fillRect(x + 5, y + 8, 6, 6);
-        break;
-      case "coffee":
-        ctx.fillStyle = COLORS.coffee;
-        ctx.fillRect(x + 3, y + 4, 10, 10);
-        ctx.fillStyle = "#DDD";
-        ctx.fillRect(x + 12, y + 6, 3, 4);
-        break;
-      case "fries":
-        ctx.fillStyle = COLORS.fries;
-        ctx.fillRect(x + 3, y + 2, 2, 10);
-        ctx.fillRect(x + 6, y + 1, 2, 11);
-        ctx.fillRect(x + 9, y + 3, 2, 9);
-        ctx.fillRect(x + 12, y + 2, 2, 10);
-        ctx.fillStyle = "#FF0000";
-        ctx.fillRect(x + 2, y + 8, 12, 6);
-        break;
+    const spriteMap: Record<string, number[][]> = {
+      icecream: ICECREAM_SPRITE,
+      coffee: COFFEE_SPRITE,
+      fries: FRIES_SPRITE,
+    };
+    const sprite = spriteMap[item.type];
+    if (sprite) {
+      drawSprite(ctx, x, y, sprite, PALETTE);
     }
   }
+}
+
+function renderGetReady(): void {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+  ctx.fillRect(0, CANVAS_HEIGHT / 2 - 30, CANVAS_WIDTH, 60);
+
+  ctx.fillStyle = COLORS.scoreText;
+  ctx.font = "bold 24px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("GET READY", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 8);
 }
 
 function renderLevelComplete(state: GameState): void {

@@ -18,11 +18,11 @@ export const INGREDIENT_FALL_SPEED = 3;
 export const INGREDIENT_WIDTH = 4;
 
 export const STARTING_LIVES = 3;
-export const STARTING_PEPPER = 3;
+export const STARTING_PEPPER = 5;
 export const EXTRA_LIFE_SCORE = 20000;
 
 export const SCORE_INGREDIENT_DROP = 50;
-export const SCORE_ENEMY_SQUASH = 500;
+export const ENEMY_SQUASH_SCORES = [500, 1000, 2000, 4000, 8000, 16000];
 export const SCORE_BURGER_COMPLETE = 1000;
 export const SCORE_BONUS_ITEM = 300;
 
@@ -31,10 +31,10 @@ export const BONUS_ITEM_TTL = 600; // ~10 seconds at 60fps
 
 export const COLORS = {
   bg: "#000000",
-  platform: "#6B4226",
-  ladder: "#66CCFF",
+  platform: "#00CED1",
+  ladder: "#00CED1",
   player1: "#FFFFFF",
-  player1Hat: "#FF0000",
+  player1Hat: "#FFFFFF",
   player1Body: "#FFFFFF",
   player2: "#00FF00",
   player2Hat: "#00AA00",
@@ -54,7 +54,8 @@ export const COLORS = {
   text: "#FFFFFF",
   scoreText: "#FFD700",
   hud: "#FF0000",
-  plate: "#4444FF",
+  plate: "#00CED1",
+  skin: "#FFCC99",
   icecream: "#FF69B4",
   coffee: "#8B4513",
   fries: "#FFD700",

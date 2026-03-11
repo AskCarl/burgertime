@@ -9,6 +9,7 @@ import {
   EXTRA_LIFE_SCORE,
 } from "./constants";
 import { isOnPlatform, isOnLadder, canMoveDirection, isAlignedToGrid, snapToGrid } from "./collision";
+import { playWalkSound, playExtraLifeSound } from "./audio";
 
 export function createPlayer(spawn: GridPosition, index: number): Player {
   return {
@@ -30,6 +31,10 @@ export function createPlayer(spawn: GridPosition, index: number): Player {
     lives: STARTING_LIVES,
     extraLifeAwarded: false,
     playerIndex: index,
+    dying: false,
+    deathTimer: 0,
+    deathFrame: 0,
+    invulnTimer: 0,
   };
 }
 
@@ -61,6 +66,20 @@ export function updatePlayer(
   input: InputState,
   levelData: LevelData
 ): void {
+  // Death animation
+  if (player.dying) {
+    player.deathTimer--;
+    if (player.deathTimer % 20 === 0) {
+      player.deathFrame = Math.min(player.deathFrame + 1, 2);
+    }
+    if (player.deathTimer <= 0) {
+      player.dying = false;
+      player.alive = false;
+      player.respawnTimer = PLAYER_RESPAWN_DELAY;
+    }
+    return;
+  }
+
   if (!player.alive) {
     player.respawnTimer--;
     if (player.respawnTimer <= 0) {
@@ -71,8 +90,14 @@ export function updatePlayer(
       player.direction = "none";
       player.subPixelX = 0;
       player.subPixelY = 0;
+      player.invulnTimer = 90;
     }
     return;
+  }
+
+  // Tick invulnerability
+  if (player.invulnTimer > 0) {
+    player.invulnTimer--;
   }
 
   // Pepper throw
@@ -179,6 +204,9 @@ export function updatePlayer(
     if (player.walkTimer >= 10) {
       player.walkTimer = 0;
       player.walkFrame = (player.walkFrame + 1) % 4;
+      if (player.walkFrame % 2 === 0) {
+        playWalkSound();
+      }
     }
   }
 
@@ -186,6 +214,7 @@ export function updatePlayer(
   if (!player.extraLifeAwarded && player.score >= EXTRA_LIFE_SCORE) {
     player.lives++;
     player.extraLifeAwarded = true;
+    playExtraLifeSound();
   }
 }
 
@@ -238,9 +267,10 @@ function coastToGrid(player: Player): void {
 }
 
 export function killPlayer(player: Player): void {
-  if (!player.alive) return;
+  if (!player.alive || player.dying) return;
   player.lives--;
-  player.alive = false;
-  player.respawnTimer = PLAYER_RESPAWN_DELAY;
+  player.dying = true;
+  player.deathTimer = 60;
+  player.deathFrame = 0;
   player.direction = "none";
 }

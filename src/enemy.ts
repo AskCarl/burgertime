@@ -37,6 +37,7 @@ export function createEnemy(
     subPixelY: 0,
     spawnCol: col,
     spawnRow: row,
+    ridingIngredient: null,
   };
 }
 
@@ -61,6 +62,11 @@ export function updateEnemy(
 
   if (enemy.stunTimer > 0) {
     enemy.stunTimer--;
+    return;
+  }
+
+  // Skip AI movement while riding an ingredient
+  if (enemy.ridingIngredient !== null) {
     return;
   }
 
@@ -114,11 +120,35 @@ export function updateEnemy(
       return distanceBetween(aPos, target) - distanceBetween(bPos, target);
     });
 
-    // Add some randomness to avoid predictable movement
+    // Type-specific AI personality
     let newDir = possibleDirs[0];
-    if (possibleDirs.length > 1 && Math.random() < 0.2) {
-      const idx = Math.floor(Math.random() * possibleDirs.length);
-      newDir = possibleDirs[idx];
+    if (enemy.type === "hotdog") {
+      // Hotdog: 40% bias toward ladders even when suboptimal
+      const ladderDirs = possibleDirs.filter((d) => d === "up" || d === "down");
+      if (ladderDirs.length > 0 && Math.random() < 0.4) {
+        newDir = ladderDirs[Math.floor(Math.random() * ladderDirs.length)];
+      } else if (possibleDirs.length > 1 && Math.random() < 0.2) {
+        newDir = possibleDirs[Math.floor(Math.random() * possibleDirs.length)];
+      }
+    } else if (enemy.type === "pickle") {
+      // Pickle: 35% random direction — more erratic/flanking
+      if (possibleDirs.length > 1 && Math.random() < 0.35) {
+        newDir = possibleDirs[Math.floor(Math.random() * possibleDirs.length)];
+      }
+    } else if (enemy.type === "egg") {
+      // Egg: prefers horizontal to get above player, then descends
+      const horizDirs = possibleDirs.filter((d) => d === "left" || d === "right");
+      if (enemy.gridPos.row > target.row && horizDirs.length > 0) {
+        // Above player target — move horizontally first
+        newDir = horizDirs[0];
+      } else if (possibleDirs.length > 1 && Math.random() < 0.2) {
+        newDir = possibleDirs[Math.floor(Math.random() * possibleDirs.length)];
+      }
+    } else {
+      // Baseline 20% random
+      if (possibleDirs.length > 1 && Math.random() < 0.2) {
+        newDir = possibleDirs[Math.floor(Math.random() * possibleDirs.length)];
+      }
     }
 
     if (newDir && newDir !== enemy.direction) {
