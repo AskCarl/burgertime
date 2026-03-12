@@ -33,7 +33,7 @@ export const DIFFICULTY_CONFIGS: Record<DifficultyMode, DifficultyConfig> = {
     hitboxScale: 0.8,
   },
   kid: {
-    lives: 5,
+    lives: Infinity,
     pepper: 8,
     enemySpeedMultiplier: 0.6,
     enemySpeedScaling: false,

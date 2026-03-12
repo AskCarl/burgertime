@@ -151,9 +151,17 @@ function renderHUD(state: GameState): void {
     ctx.fillStyle = COLORS.scoreText;
     ctx.fillText(`1UP ${p1.score.toString().padStart(6, "0")}`, 8, 14);
 
-    // Lives (cap display at 5)
-    for (let i = 0; i < Math.min(p1.lives, 5); i++) {
-      drawMiniChef(8 + i * 12, 20, COLORS.player1Hat);
+    // Lives display
+    if (p1.lives === Infinity) {
+      drawMiniChef(8, 20, COLORS.player1Hat);
+      ctx.fillStyle = COLORS.text;
+      ctx.font = "10px monospace";
+      ctx.textAlign = "left";
+      ctx.fillText("x\u221E", 20, 28);
+    } else {
+      for (let i = 0; i < Math.min(p1.lives, 5); i++) {
+        drawMiniChef(8 + i * 12, 20, COLORS.player1Hat);
+      }
     }
 
     // Pepper count
