@@ -1,4 +1,4 @@
-import type { Enemy, Player, LevelData, GridPosition, EnemyType } from "./types";
+import type { Enemy, Player, LevelData, GridPosition, EnemyType, DifficultyConfig } from "./types";
 import {
   TILE_SIZE,
   ENEMY_BASE_SPEED,
@@ -20,8 +20,14 @@ export function createEnemy(
   col: number,
   row: number,
   type: EnemyType,
-  level: number
+  level: number,
+  cfg?: DifficultyConfig
 ): Enemy {
+  const speedMult = cfg?.enemySpeedMultiplier ?? 1.0;
+  const scaling = cfg?.enemySpeedScaling ?? true;
+  const baseSpeed = ENEMY_BASE_SPEED * speedMult;
+  const levelBonus = scaling ? level * ENEMY_SPEED_INCREMENT * speedMult : 0;
+
   return {
     pos: { x: col * TILE_SIZE, y: row * TILE_SIZE },
     gridPos: { col, row },
@@ -30,7 +36,7 @@ export function createEnemy(
     alive: true,
     stunTimer: 0,
     respawnTimer: 0,
-    speed: ENEMY_BASE_SPEED + level * ENEMY_SPEED_INCREMENT,
+    speed: baseSpeed + levelBonus,
     walkFrame: 0,
     walkTimer: 0,
     subPixelX: 0,
@@ -44,7 +50,8 @@ export function createEnemy(
 export function updateEnemy(
   enemy: Enemy,
   players: Player[],
-  levelData: LevelData
+  levelData: LevelData,
+  cfg?: DifficultyConfig
 ): void {
   if (!enemy.alive) {
     enemy.respawnTimer--;
@@ -151,6 +158,12 @@ export function updateEnemy(
       }
     }
 
+    // Extra randomness from difficulty config (kid mode makes enemies wander more)
+    const extraRandom = cfg?.enemyRandomness ?? 0;
+    if (extraRandom > 0 && possibleDirs.length > 1 && Math.random() < extraRandom) {
+      newDir = possibleDirs[Math.floor(Math.random() * possibleDirs.length)];
+    }
+
     if (newDir && newDir !== enemy.direction) {
       enemy.direction = newDir;
       // Reset accumulators on direction change to prevent drift
@@ -209,7 +222,8 @@ function getNextGrid(pos: GridPosition, dir: "left" | "right" | "up" | "down"): 
 
 export function checkPepperHit(
   player: Player,
-  enemies: Enemy[]
+  enemies: Enemy[],
+  cfg?: DifficultyConfig
 ): void {
   if (!player.pepperActive || !player.alive) return;
 
@@ -244,19 +258,21 @@ export function checkPepperHit(
     }
 
     if (inRange) {
-      enemy.stunTimer = STUN_DURATION;
+      enemy.stunTimer = cfg?.stunDuration ?? STUN_DURATION;
     }
   }
 }
 
 export function checkEnemyPlayerCollision(
   enemy: Enemy,
-  player: Player
+  player: Player,
+  cfg?: DifficultyConfig
 ): boolean {
   if (!enemy.alive || !player.alive || enemy.stunTimer > 0) return false;
 
   const dx = Math.abs(enemy.pos.x - player.pos.x);
   const dy = Math.abs(enemy.pos.y - player.pos.y);
+  const hitbox = TILE_SIZE * (cfg?.hitboxScale ?? 0.8);
 
-  return dx < TILE_SIZE * 0.8 && dy < TILE_SIZE * 0.8;
+  return dx < hitbox && dy < hitbox;
 }

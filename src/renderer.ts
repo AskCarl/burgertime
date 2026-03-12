@@ -95,20 +95,23 @@ function renderTitle(state: GameState): void {
   ctx.font = "16px monospace";
   ctx.fillText("Press ENTER to Start", CANVAS_WIDTH / 2, 200);
   ctx.fillText("Press 2 for 2-Player Mode", CANVAS_WIDTH / 2, 230);
+  ctx.fillStyle = "#90EE90";
+  ctx.fillText("Press K for Kid Mode", CANVAS_WIDTH / 2, 260);
 
+  ctx.fillStyle = COLORS.text;
   ctx.font = "12px monospace";
-  ctx.fillText("Player 1: Arrow Keys + Space", CANVAS_WIDTH / 2, 290);
-  ctx.fillText("Player 2: WASD + E", CANVAS_WIDTH / 2, 310);
+  ctx.fillText("Player 1: Arrow Keys + Space", CANVAS_WIDTH / 2, 300);
+  ctx.fillText("Player 2: WASD + E", CANVAS_WIDTH / 2, 320);
 
   ctx.fillStyle = COLORS.scoreText;
   ctx.font = "14px monospace";
   ctx.fillText(`HIGH SCORE: ${state.highScore}`, CANVAS_WIDTH / 2, 370);
 
   // Draw a little burger
-  drawIngredientPixels(CANVAS_WIDTH / 2 - 32, 400, "bun-top");
-  drawIngredientPixels(CANVAS_WIDTH / 2 - 32, 414, "lettuce");
-  drawIngredientPixels(CANVAS_WIDTH / 2 - 32, 428, "meat");
-  drawIngredientPixels(CANVAS_WIDTH / 2 - 32, 442, "bun-bottom");
+  drawIngredientPixels(CANVAS_WIDTH / 2 - 32, 390, "bun-top");
+  drawIngredientPixels(CANVAS_WIDTH / 2 - 32, 404, "lettuce");
+  drawIngredientPixels(CANVAS_WIDTH / 2 - 32, 418, "meat");
+  drawIngredientPixels(CANVAS_WIDTH / 2 - 32, 432, "bun-bottom");
 }
 
 function renderGame(state: GameState): void {
@@ -163,7 +166,8 @@ function renderHUD(state: GameState): void {
   ctx.textAlign = "center";
   ctx.font = "12px monospace";
   ctx.fillText(`HI ${state.highScore.toString().padStart(6, "0")}`, CANVAS_WIDTH / 2, 14);
-  ctx.fillText(`LV ${state.level + 1}`, CANVAS_WIDTH / 2, 28);
+  const lvText = state.difficulty === "kid" ? `LV ${state.level + 1} KID` : `LV ${state.level + 1}`;
+  ctx.fillText(lvText, CANVAS_WIDTH / 2, 28);
 
   if (state.twoPlayerMode) {
     const p2 = state.players[1];

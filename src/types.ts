@@ -6,6 +6,45 @@ export type IngredientType = "bun-top" | "lettuce" | "meat" | "cheese" | "bun-bo
 
 export type GameScreen = "title" | "playing" | "gameover" | "levelcomplete" | "getready";
 
+export type DifficultyMode = "normal" | "kid";
+
+export interface DifficultyConfig {
+  lives: number;
+  pepper: number;
+  enemySpeedMultiplier: number;
+  enemySpeedScaling: boolean;
+  enemyRandomness: number;
+  stunDuration: number;
+  invulnDuration: number;
+  extraLifeScore: number;
+  hitboxScale: number;
+}
+
+export const DIFFICULTY_CONFIGS: Record<DifficultyMode, DifficultyConfig> = {
+  normal: {
+    lives: 3,
+    pepper: 5,
+    enemySpeedMultiplier: 1.0,
+    enemySpeedScaling: true,
+    enemyRandomness: 0,
+    stunDuration: 180,
+    invulnDuration: 90,
+    extraLifeScore: 20000,
+    hitboxScale: 0.8,
+  },
+  kid: {
+    lives: 5,
+    pepper: 8,
+    enemySpeedMultiplier: 0.6,
+    enemySpeedScaling: false,
+    enemyRandomness: 0.3,
+    stunDuration: 300,
+    invulnDuration: 150,
+    extraLifeScore: 10000,
+    hitboxScale: 0.6,
+  },
+};
+
 export interface Position {
   x: number;
   y: number;
@@ -107,6 +146,7 @@ export interface GameState {
   level: number;
   levelData: LevelData;
   twoPlayerMode: boolean;
+  difficulty: DifficultyMode;
   highScore: number;
   levelCompleteTimer: number;
   bonusItems: BonusItem[];

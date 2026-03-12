@@ -1,4 +1,4 @@
-import type { Player, InputState, LevelData, GridPosition } from "./types";
+import type { Player, InputState, LevelData, GridPosition, DifficultyConfig } from "./types";
 import {
   PLAYER_SPEED,
   TILE_SIZE,
@@ -6,12 +6,11 @@ import {
   STARTING_PEPPER,
   PEPPER_DURATION,
   PLAYER_RESPAWN_DELAY,
-  EXTRA_LIFE_SCORE,
 } from "./constants";
 import { isOnPlatform, isOnLadder, canMoveDirection, isAlignedToGrid, snapToGrid } from "./collision";
 import { playWalkSound, playExtraLifeSound } from "./audio";
 
-export function createPlayer(spawn: GridPosition, index: number): Player {
+export function createPlayer(spawn: GridPosition, index: number, cfg?: DifficultyConfig): Player {
   return {
     pos: { x: spawn.col * TILE_SIZE, y: spawn.row * TILE_SIZE },
     gridPos: { ...spawn },
@@ -19,7 +18,7 @@ export function createPlayer(spawn: GridPosition, index: number): Player {
     facing: "right",
     alive: true,
     respawnTimer: 0,
-    pepperCount: STARTING_PEPPER,
+    pepperCount: cfg?.pepper ?? STARTING_PEPPER,
     pepperActive: false,
     pepperTimer: 0,
     pepperDirection: "right",
@@ -28,7 +27,7 @@ export function createPlayer(spawn: GridPosition, index: number): Player {
     subPixelX: 0,
     subPixelY: 0,
     score: 0,
-    lives: STARTING_LIVES,
+    lives: cfg?.lives ?? STARTING_LIVES,
     extraLifeAwarded: false,
     playerIndex: index,
     dying: false,
@@ -64,7 +63,8 @@ function accumMove(player: Player, axis: "x" | "y", speed: number): number {
 export function updatePlayer(
   player: Player,
   input: InputState,
-  levelData: LevelData
+  levelData: LevelData,
+  cfg?: DifficultyConfig
 ): void {
   // Death animation
   if (player.dying) {
@@ -90,7 +90,7 @@ export function updatePlayer(
       player.direction = "none";
       player.subPixelX = 0;
       player.subPixelY = 0;
-      player.invulnTimer = 90;
+      player.invulnTimer = cfg?.invulnDuration ?? 90;
     }
     return;
   }
@@ -211,7 +211,8 @@ export function updatePlayer(
   }
 
   // Extra life check
-  if (!player.extraLifeAwarded && player.score >= EXTRA_LIFE_SCORE) {
+  const extraLifeThreshold = cfg?.extraLifeScore ?? 20000;
+  if (!player.extraLifeAwarded && player.score >= extraLifeThreshold) {
     player.lives++;
     player.extraLifeAwarded = true;
     playExtraLifeSound();

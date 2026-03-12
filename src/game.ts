@@ -1,4 +1,5 @@
-import type { GameState, Player, Enemy, BonusItem, ScorePopup } from "./types";
+import type { GameState, Player, Enemy, BonusItem, ScorePopup, DifficultyMode } from "./types";
+import { DIFFICULTY_CONFIGS } from "./types";
 import { getLevel } from "./level";
 import { createPlayer, updatePlayer, killPlayer, resetPlayerState } from "./player";
 import { createEnemy, updateEnemy, checkPepperHit, checkEnemyPlayerCollision } from "./enemy";
@@ -42,6 +43,7 @@ export function createGameState(): GameState {
     level: 0,
     levelData: getLevel(0),
     twoPlayerMode: false,
+    difficulty: "normal",
     highScore: isNaN(highScore) ? 0 : highScore,
     levelCompleteTimer: 0,
     bonusItems: [],
@@ -54,17 +56,18 @@ export function createGameState(): GameState {
 function initLevel(state: GameState): void {
   const levelData = getLevel(state.level);
   state.levelData = levelData;
+  const cfg = DIFFICULTY_CONFIGS[state.difficulty];
 
   // Create players
-  state.players = [createPlayer(levelData.playerSpawn, 0)];
+  state.players = [createPlayer(levelData.playerSpawn, 0, cfg)];
   if (state.twoPlayerMode) {
-    state.players.push(createPlayer(levelData.player2Spawn, 1));
+    state.players.push(createPlayer(levelData.player2Spawn, 1, cfg));
   }
 
   // Create enemies — after completing all 6 levels, each cycle adds 1 extra enemy
   const enemySpawns = levelData.enemySpawns;
   state.enemies = enemySpawns.map((spawn) =>
-    createEnemy(spawn.col, spawn.row, spawn.type, state.level)
+    createEnemy(spawn.col, spawn.row, spawn.type, state.level, cfg)
   );
 
   const extraEnemies = Math.floor(state.level / 6);
@@ -73,7 +76,7 @@ function initLevel(state: GameState): void {
     const spawn = enemySpawns[i % enemySpawns.length];
     if (spawn) {
       const type = enemyTypes[(enemySpawns.length + i) % enemyTypes.length] ?? "hotdog";
-      state.enemies.push(createEnemy(spawn.col, spawn.row, type, state.level));
+      state.enemies.push(createEnemy(spawn.col, spawn.row, type, state.level, cfg));
     }
   }
 
@@ -88,8 +91,9 @@ function initLevel(state: GameState): void {
   state.scorePopups = [];
 }
 
-export function startGame(state: GameState, twoPlayer: boolean): void {
+export function startGame(state: GameState, twoPlayer: boolean, difficulty: DifficultyMode = "normal"): void {
   state.twoPlayerMode = twoPlayer;
+  state.difficulty = difficulty;
   state.level = 0;
   resetPlayerState();
   initLevel(state);
@@ -135,10 +139,15 @@ function updateTitle(state: GameState): void {
     clearKey("Digit2");
     startGame(state, true);
   }
+  if (isKeyPressed("KeyK")) {
+    clearKey("KeyK");
+    startGame(state, false, "kid");
+  }
 }
 
 function updatePlaying(state: GameState): void {
   const inputs = [getPlayer1Input(), getPlayer2Input()];
+  const cfg = DIFFICULTY_CONFIGS[state.difficulty];
 
   // Update players
   for (let i = 0; i < state.players.length; i++) {
@@ -147,7 +156,7 @@ function updatePlaying(state: GameState): void {
     if (!player || !input) continue;
 
     const wasPeppering = player.pepperActive;
-    updatePlayer(player, input, state.levelData);
+    updatePlayer(player, input, state.levelData, cfg);
 
     // Play pepper sound on activation
     if (player.pepperActive && !wasPeppering) {
@@ -158,17 +167,17 @@ function updatePlaying(state: GameState): void {
     checkPlayerOnIngredient(player, state.ingredients, state.scorePopups);
 
     // Check pepper hit
-    checkPepperHit(player, state.enemies);
+    checkPepperHit(player, state.enemies, cfg);
   }
 
   // Update enemies
   for (const enemy of state.enemies) {
-    updateEnemy(enemy, state.players, state.levelData);
+    updateEnemy(enemy, state.players, state.levelData, cfg);
 
     // Check collision with players (skip invulnerable or dying)
     for (const player of state.players) {
       if (player.invulnTimer > 0 || player.dying) continue;
-      if (checkEnemyPlayerCollision(enemy, player)) {
+      if (checkEnemyPlayerCollision(enemy, player, cfg)) {
         killPlayer(player);
         playDeathSound();
       }

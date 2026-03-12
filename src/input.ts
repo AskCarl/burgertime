@@ -105,6 +105,27 @@ function initTouchControls(): void {
       startBtn.classList.remove("active");
     });
   }
+
+  // Kid mode button — maps to K key
+  const kidBtn = document.querySelector<HTMLElement>('[data-action="kid"]');
+  if (kidBtn) {
+    kidBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      keyState["KeyK"] = true;
+      kidBtn.classList.add("active");
+    }, { passive: false });
+
+    kidBtn.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      keyState["KeyK"] = false;
+      kidBtn.classList.remove("active");
+    }, { passive: false });
+
+    kidBtn.addEventListener("touchcancel", () => {
+      keyState["KeyK"] = false;
+      kidBtn.classList.remove("active");
+    });
+  }
 }
 
 export function getPlayer1Input(): InputState {
